@@ -1,5 +1,11 @@
 DROP TABLE IF EXISTS product CASCADE;
 
+-- I used this to load my data into my DB
+-- COPY question
+-- FROM 'absolute path to csv file'
+-- DELIMITER ',' CSV HEADER;
+-- in Server/index.js you'll find the start of my "t" with query attempts
+
 CREATE TABLE product (
   id INTEGER NOT NULL,
   name VARCHAR(100) NOT NULL,
