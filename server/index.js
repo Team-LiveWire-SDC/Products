@@ -10,8 +10,8 @@ app.listen(3000, () => {
 pool.connect();
 
 app.get('/products', (req, res) => {
-  var page = req.params.page || 1;
-  var count = req.params.count || 5;
+  var page = req.query.page || 1;
+  var count = req.query.count || 5;
   var offset = (page - 1) * count;
 
   pool.query(`SELECT * FROM product LIMIT ${count} OFFSET ${offset}`, (err, result) => {
@@ -26,11 +26,78 @@ app.get('/products', (req, res) => {
 
 app.get('/products/:product_id', (req, res) => {
 
-  pool.query(`SELECT * FROM product LEFT JOIN features on product.id = ${req.params.product_id} WHERE features.product_id = ${req.params.product_id}`, (err, result) => {
+  var sqlQuery = `SELECT *, (SELECT json_agg(json_build_object(
+    'feature', features.feature,
+    'value', features.value
+    ))
+    FROM features WHERE features.product_id = ${req.params.product_id}
+    )
+    AS features
+    FROM product
+    WHERE product.id = ${req.params.product_id}`
+
+  pool.query(sqlQuery, (err, result) => {
     if(err) {
       console.log(err);
     } else {
       res.status(200).send(result.rows);
+    }
+  });
+  pool.end;
+})
+
+app.get('/products/:product_id/styles', (req, res) => {
+
+  var sqlQuery = `SELECT id AS product_id,
+    (SELECT json_agg(json_build_object(
+        'style_id', styles.id,
+        'name', styles.name,
+        'original_price', styles.original_price,
+        'sale_price', styles.default_style,
+        'default?', styles.default_style,
+        'photos', (SELECT json_agg(json_build_object(
+          'thumbnail_url', photos.thumbnail_url,
+          'url', photos.url
+        )
+        )
+        FROM photos
+        WHERE photos.styleId = styles.id
+        ),
+        'skus', (SELECT json_object_agg(skus.id, json_build_object(
+          'quantity', skus.quantity,
+          'size', skus.size
+        )
+      )
+        FROM skus
+        WHERE skus.styleId = styles.id
+    )
+    )
+    )
+    FROM styles
+    WHERE styles.productId = ${req.params.product_id}
+    )
+  AS results
+  FROM product
+  WHERE id = ${req.params.product_id}`;
+
+  pool.query(sqlQuery, (err, result) => {
+    if(err) {
+      console.log(err);
+      res.end;
+    } else {
+      res.status(200).send(result.rows);
+    }
+  });
+  pool.end;
+})
+
+app.get('/products/:product_id/related', (req, res) => {
+
+  pool.query(`SELECT json_agg(related.related_product_id) FROM related WHERE related.current_product_id = ${req.params.product_id}`, (err, result) => {
+    if(err) {
+      console.log(err);
+    } else {
+      res.status(200).send(result.rows[0].json_agg);
     }
   });
   pool.end;
