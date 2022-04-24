@@ -1,20 +1,20 @@
-DROP TABLE IF EXISTS product CASCADE;
-
 -- I used this to load my data into my DB
 -- COPY database name
 -- FROM 'absolute path to csv file'
 -- DELIMITER ',' CSV HEADER;
 -- in Server/index.js you'll find the start of my "t" with query attempts
 
-CREATE TABLE product (
-  id INTEGER NOT NULL,
-  name VARCHAR(100) NOT NULL,
-  slogan VARCHAR(300) NOT NULL,
-  description VARCHAR(500) NOT NULL,
-  category VARCHAR(300) NOT NULL,
-  default_price INTEGER NOT NULL,
-  PRIMARY KEY (id)
-);
+-- DROP TABLE IF EXISTS product CASCADE;
+
+-- CREATE TABLE product (
+--   id INTEGER NOT NULL,
+--   name VARCHAR(100) NOT NULL,
+--   slogan VARCHAR(300) NOT NULL,
+--   description VARCHAR(500) NOT NULL,
+--   category VARCHAR(300) NOT NULL,
+--   default_price INTEGER NOT NULL,
+--   PRIMARY KEY (id)
+-- );
 
 DROP TABLE IF EXISTS features;
 
@@ -72,6 +72,33 @@ ALTER TABLE styles ADD FOREIGN KEY (productId) REFERENCES product (id);
 ALTER TABLE skus ADD FOREIGN KEY (styleId) REFERENCES styles (id);
 ALTER TABLE photos ADD FOREIGN KEY (styleId) REFERENCES styles (id);
 ALTER TABLE related ADD FOREIGN KEY (current_product_id) REFERENCES product (id);
+
+-- COPY product
+-- FROM '/Users/CaseyEads/hackreactor/Data/product.csv'
+-- DELIMITER ',' CSV HEADER;
+
+COPY styles
+FROM '/Users/CaseyEads/hackreactor/Data/styles.csv'
+DELIMITER ',' CSV HEADER;
+
+COPY features
+FROM '/Users/CaseyEads/hackreactor/Data/features.csv'
+DELIMITER ',' CSV HEADER;
+
+COPY skus
+FROM '/Users/CaseyEads/hackreactor/Data/skus.csv'
+DELIMITER ',' CSV HEADER;
+
+COPY related
+FROM '/Users/CaseyEads/hackreactor/Data/related.csv'
+DELIMITER ',' CSV HEADER;
+
+COPY photos
+FROM '/Users/CaseyEads/hackreactor/Data/photos.csv'
+DELIMITER ',' CSV HEADER;
+
+
+
 
 -- ---
 -- Table Properties
