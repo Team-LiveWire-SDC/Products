@@ -9,12 +9,13 @@ app.listen(3000, () => {
 
 pool.connect();
 
+console.time('get products');
 app.get('/products', (req, res) => {
   var page = req.query.page || 1;
   var count = req.query.count || 5;
   var offset = (page - 1) * count;
 
-  pool.query(`SELECT * FROM product LIMIT ${count} OFFSET ${offset}`, (err, result) => {
+  pool.query(`EXPLAIN ANALYZE SELECT * FROM product LIMIT ${count} OFFSET ${offset}`, (err, result) => {
     if(err) {
       console.log(err);
     } else {
@@ -23,10 +24,12 @@ app.get('/products', (req, res) => {
   });
   pool.end;
 })
+console.timeEnd('get products');
 
+console.time('get product info');
 app.get('/products/:product_id', (req, res) => {
 
-  var sqlQuery = `SELECT *, (SELECT json_agg(json_build_object(
+  var sqlQuery = `EXPLAIN ANALYZE SELECT *, (SELECT json_agg(json_build_object(
     'feature', features.feature,
     'value', features.value
     ))
@@ -45,10 +48,13 @@ app.get('/products/:product_id', (req, res) => {
   });
   pool.end;
 })
+console.timeEnd('get product info');
+
+console.time('get product styles');
 
 app.get('/products/:product_id/styles', (req, res) => {
 
-  var sqlQuery = `SELECT id AS product_id,
+  var sqlQuery = `EXPLAIN ANALYZE SELECT id AS product_id,
     (SELECT json_agg(json_build_object(
         'style_id', styles.id,
         'name', styles.name,
@@ -91,9 +97,12 @@ app.get('/products/:product_id/styles', (req, res) => {
   pool.end;
 })
 
+console.timeEnd('get product styles');
+
+console.time('get product related');
 app.get('/products/:product_id/related', (req, res) => {
 
-  pool.query(`SELECT json_agg(related.related_product_id) FROM related WHERE related.current_product_id = ${req.params.product_id}`, (err, result) => {
+  pool.query(`EXPLAIN ANALYZE SELECT json_agg(related.related_product_id) FROM related WHERE related.current_product_id = ${req.params.product_id}`, (err, result) => {
     if(err) {
       console.log(err);
     } else {
@@ -102,3 +111,5 @@ app.get('/products/:product_id/related', (req, res) => {
   });
   pool.end;
 })
+
+console.timeEnd('get product related');
