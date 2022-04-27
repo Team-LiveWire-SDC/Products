@@ -3,19 +3,15 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 
-app.listen(3000, () => {
-  console.log('server is listening');
-})
-
 pool.connect();
 
-console.time('get products');
+// console.time('get products');
 app.get('/products', (req, res) => {
   var page = req.query.page || 1;
   var count = req.query.count || 5;
   var offset = (page - 1) * count;
 
-  pool.query(`EXPLAIN ANALYZE SELECT * FROM product LIMIT ${count} OFFSET ${offset}`, (err, result) => {
+  pool.query(`SELECT * FROM product LIMIT ${count} OFFSET ${offset};`, (err, result) => {
     if(err) {
       console.log(err);
     } else {
@@ -24,12 +20,12 @@ app.get('/products', (req, res) => {
   });
   pool.end;
 })
-console.timeEnd('get products');
+// console.timeEnd('get products');
 
-console.time('get product info');
+// console.time('get product info');
 app.get('/products/:product_id', (req, res) => {
 
-  var sqlQuery = `EXPLAIN ANALYZE SELECT *, (SELECT json_agg(json_build_object(
+  var sqlQuery = `SELECT *, (SELECT json_agg(json_build_object(
     'feature', features.feature,
     'value', features.value
     ))
@@ -37,24 +33,24 @@ app.get('/products/:product_id', (req, res) => {
     )
     AS features
     FROM product
-    WHERE product.id = ${req.params.product_id}`
+    WHERE product.id = ${req.params.product_id};`
 
   pool.query(sqlQuery, (err, result) => {
     if(err) {
       console.log(err);
     } else {
-      res.status(200).send(result.rows);
+      res.status(200).send(result.rows[0]);
     }
   });
   pool.end;
 })
-console.timeEnd('get product info');
+// console.timeEnd('get product info');
 
-console.time('get product styles');
+// console.time('get product styles');
 
 app.get('/products/:product_id/styles', (req, res) => {
 
-  var sqlQuery = `EXPLAIN ANALYZE SELECT id AS product_id,
+  var sqlQuery = `SELECT id AS product_id,
     (SELECT json_agg(json_build_object(
         'style_id', styles.id,
         'name', styles.name,
@@ -84,7 +80,7 @@ app.get('/products/:product_id/styles', (req, res) => {
     )
   AS results
   FROM product
-  WHERE id = ${req.params.product_id}`;
+  WHERE id = ${req.params.product_id};`;
 
   pool.query(sqlQuery, (err, result) => {
     if(err) {
@@ -97,12 +93,16 @@ app.get('/products/:product_id/styles', (req, res) => {
   pool.end;
 })
 
-console.timeEnd('get product styles');
+// console.timeEnd('get product styles');
 
-console.time('get product related');
+// console.time('get product related');
 app.get('/products/:product_id/related', (req, res) => {
 
-  pool.query(`EXPLAIN ANALYZE SELECT json_agg(related.related_product_id) FROM related WHERE related.current_product_id = ${req.params.product_id}`, (err, result) => {
+  var sqlQuery = `SELECT json_agg(related_product_id)
+    FROM related
+    WHERE current_product_id = ${req.params.product_id};`;
+
+  pool.query(sqlQuery, (err, result) => {
     if(err) {
       console.log(err);
     } else {
@@ -112,4 +112,7 @@ app.get('/products/:product_id/related', (req, res) => {
   pool.end;
 })
 
-console.timeEnd('get product related');
+// console.timeEnd('get product related');
+app.listen(3000, () => {
+  console.log('server is listening');
+})
