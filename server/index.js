@@ -10,8 +10,9 @@ app.get('/products', (req, res) => {
   var page = req.query.page || 1;
   var count = req.query.count || 5;
   var offset = (page - 1) * count;
+  var max = Number(offset) + Number(count);
 
-  pool.query(`SELECT * FROM product LIMIT ${count} OFFSET ${offset};`, (err, result) => {
+  pool.query(`SELECT * FROM product WHERE id > ${offset} AND id <= ${max};`, (err, result) => {
     if(err) {
       console.log(err);
     } else {
